@@ -2,12 +2,17 @@
 
 class Database extends Upload 
 {
+    // We create some constants and static properties
     const HOST="localhost";
     const DATABASE="adminpanel";
-    const CHARSET="utf8";
     const USERNAME="root";
     const PASSWORD="";
     protected static $connection;
+    public static $table;
+    public static $select="*";
+    public static $whereRawKey;
+    public static $whereRawValue;
+
 
     // Constructor method calls __connect() method
     function __construct() { self::__connect(); }     
@@ -16,16 +21,14 @@ class Database extends Upload
     // Creates database connection
     public static function __connect()
     {
-        try
-        {
+        try{
             // $db = new PDO("mysql:host=localhost;dbname=adminpanel;charset=utf8", "root", "");
-            self::$connection = new PDO("mysql:host=".self::HOST.";dbname=".self::DATABASE.";charset=".self::CHARSET."", self::USERNAME, self::PASSWORD);
+            self::$connection = new PDO("mysql:host=".self::HOST.";dbname=".self::DATABASE.";charset=utf8", self::USERNAME, self::PASSWORD);
             
-            echo "Database connection successfully established !";
+            return "Database connection successfully established !";
         } 
-        catch(PDOException $error)
-        {
-            // (Object) transforms array $errorData into an object :
+        catch(PDOException $error){
+            // By using (Object) syntaxe we convert array $data into an object 
             $data =(Object) [
                 "title"=>"Connection Error",
                 "code"=>$error->getCode(),
@@ -53,6 +56,36 @@ class Database extends Upload
             include_once("../".$fileHref);
         }
     }
+
+
+    // Returns a new Database class with public static $table = $tableName
+    public static function table($tableName)
+    {
+        self::$table = $tableName;
+        self::$select = "*";
+        self::$whereRawKey = null;
+        self::$whereRawValue = null;
+        return new self;    // self keyword refers to Database class
+    }
+
+
+    // Returns a new Database class with public static $select = $columns
+    public static function select($columns)
+    {
+        self::$select = (is_array($columns)) ? implode(", ", $columns) : $columns;
+        return new self;    
+    }
+
+
+    // Returns a new Database class with public static $whereRawKey = $RawKey and $whereRawValue = $RawValue
+    public static function whereRaw($RawKey, $RawValue)
+    {
+        self::$whereRawKey = $RawKey;
+        self::$whereRawValue = $RawValue;
+        return new self;
+    }
+
+    
 
 }
 
