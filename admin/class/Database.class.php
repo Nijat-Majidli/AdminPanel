@@ -101,7 +101,7 @@ class Database extends Upload
     }
 
     
-    // Returns a new Database class with public static $whereKey = $param and $whereValue = $param2 ou $param3
+    // Returns a new Database class with public static $whereKey=$param1 and $whereValue=$param2 ou $param3
     public static function where($param1, $param2=null, $param3=null)
     {
         if(is_array($param1))
@@ -188,8 +188,8 @@ class Database extends Upload
             }
         }
 
-        $SQL.= !empty(self::$orderBy) ? "ORDER BY ".self::$orderBy." " : "";
-        $SQL.= !empty(self::$limit) ? "LIMIT ".self::$limit : "";
+        $SQL.= !empty(self::$orderBy) ? "ORDER BY ".self::$orderBy." " : " ";
+        $SQL.= !empty(self::$limit) ? "LIMIT ".self::$limit : " ";
 
         if($WHERE!=null)
         {
@@ -218,11 +218,125 @@ class Database extends Upload
         {
             return false;
         }
-
-        
     }
 
 
+    public static function first()
+    {
+        $entity = self::get();
+
+        if($entity)
+        {
+            return $entity[0];
+        }
+        else{
+            return false;
+        }
+    }
+
+
+    // Adds new data into database
+    public static function create($arrayColumns)
+    {
+        $colummnsKey = array_keys($arrayColumns); 
+        $columnsValue = array_values($arrayColumns);
+        $SQL = "INSERT INTO ".self::$table." SET ".implode("=?, ", $colummnsKey)."=? ";
+        $Entity = self::$connection->prepare($SQL);
+        $Entity->execute($columnsValue);
+
+        if($Entity)
+        {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+
+    public static function update($arrayColumns)
+    {
+        $colummnsKey = array_keys($arrayColumns); 
+        $columnsVal = array_values($arrayColumns);
+
+        $SQL = "UPDATE ".self::$table." SET ".implode("=?, ", $colummnsKey)."=? ";
+
+        $WHERE = null;
+
+        if(!empty(self::$whereKey) && !empty(self::$whereRawKey))
+        {
+            $SQL.= "WHERE ".self::$whereKey." AND ".self::$whereRawKey." ";
+            $WHERE = array_merge(self::$whereValue, self::$whereRawValue);
+        }
+        else
+        {
+            if(!empty(self::$whereKey))
+            {
+                $SQL.= "WHERE ".self::$whereKey." ";
+                $WHERE = self::$whereValue;
+            }   
+            if(!empty(self::$whereRawKey))
+            {
+                $SQL.= "WHERE ".self::$whereRawKey." ";
+                $WHERE = self::$whereRawValue;
+            }
+        }
+
+        if($WHERE!=null)
+        {
+            $columnsValues = array_merge($columnsVal, $WHERE);
+        }
+        
+        
+        $Entity = self::$connection->prepare($SQL);
+        $Entity->execute($columnsValues);
+
+        if($Entity)
+        {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+
+    public static function delete()
+    {
+        $SQL = "DELETE FROM ".self::$table." ";
+
+        $WHERE = null;
+
+        if(!empty(self::$whereKey) && !empty(self::$whereRawKey))
+        {
+            $SQL.= "WHERE ".self::$whereKey." AND ".self::$whereRawKey." ";
+            $WHERE = array_merge(self::$whereValue, self::$whereRawValue);
+        }
+        else
+        {
+            if(!empty(self::$whereKey))
+            {
+                $SQL.= "WHERE ".self::$whereKey." ";
+                $WHERE = self::$whereValue;
+            }   
+            if(!empty(self::$whereRawKey))
+            {
+                $SQL.= "WHERE ".self::$whereRawKey." ";
+                $WHERE = self::$whereRawValue;
+            }
+        }
+
+        $Entity = self::$connection->prepare($SQL);
+        $Entity->execute($WHERE);
+
+        if($Entity)
+        {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
 
 
 }
