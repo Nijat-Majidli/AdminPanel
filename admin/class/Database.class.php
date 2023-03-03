@@ -2,7 +2,7 @@
 
 class Database extends Upload 
 {
-    // We create some constants and static properties
+    // We create several constants and static properties:
     const HOST="localhost";
     const DATABASE="adminpanel";
     const USERNAME="root";
@@ -21,21 +21,21 @@ class Database extends Upload
 
 
     // Constructor method calls __connect() method
-    function __construct() { self::__connect(); }     
+    function __construct() 
+    { 
+        self::__connect(); 
+    }     
     
 
     // Creates database connection
     public static function __connect()
     {
-        try
-        {
+        try{
             // $db = new PDO("mysql:host=localhost;dbname=adminpanel;charset=utf8", "root", "");
             self::$connection = new PDO("mysql:host=".self::HOST.";dbname=".self::DATABASE.";charset=utf8", self::USERNAME, self::PASSWORD);
-            
             return "Database connection successfully established !";
         } 
-        catch(PDOException $error)
-        {
+        catch(PDOException $error){
             // (Object) converts array $data into an object 
             $data = (Object) [
                 "title"=>"Connection Error",
@@ -55,12 +55,10 @@ class Database extends Upload
     {
         $fileHref = "errors/".$pagename.".php";     // $fileHref = "errors/errorPage.php" 
         
-        if(file_exists($fileHref))
-        {
+        if(file_exists($fileHref)){
             include_once($fileHref);
         }
-        elseif(file_exists("../".$fileHref))
-        {
+        elseif(file_exists("../".$fileHref)){
             include_once("../".$fileHref);
         }
     }
@@ -130,8 +128,7 @@ class Database extends Upload
         return new self;
     }
 
-
-    // 
+    
     public static function orderBy($parameter)
     {
         self::$orderBy = $parameter[0]." ".(!empty($parameter[1]) ? $parameter[1] : "ASC");
@@ -139,7 +136,6 @@ class Database extends Upload
     }
 
 
-    // 
     public static function limit($start, $end=null)
     {
         self::$limit = $start.($end!=null ? ",".$end : "");
@@ -339,6 +335,33 @@ class Database extends Upload
     }
 
 
+    public static function primaryID($tableName)
+    {
+        $SQL = "SHOW TABLE STATUS FROM ".self::DATABASE." WHERE Name='".$tableName."'";  //SHOW TABLE STATUS FROM adminpanel WHERE Name='corporate'
+        $entity = self::$connection->query($SQL);
+        $result = $entity->fetchAll(PDO::FETCH_ASSOC);
+       
+        return $result[0]['Auto_increment'];
+    }
+
+
+    public static function updateOrCreate($whereArray, $columnArray)
+    {
+        self::where($whereArray);
+        
+        $getResult = self::first();
+        
+        if($getResult)
+        {
+            return self::update($columnArray);
+        }
+        else
+        {
+            return self::create($columnArray);
+        }
+    }
+
+    
 }
 
 
